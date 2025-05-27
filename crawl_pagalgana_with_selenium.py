@@ -4,38 +4,48 @@ from collections import deque
 import json
 import time
 
-from selenium import webdriver
+# Import undetected_chromedriver
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 
 
-def create_webdriver_instance(browser_type="chrome"):
-    """Initializes and returns a Selenium WebDriver instance."""
-    if browser_type.lower() == "chrome":
-        options = webdriver.ChromeOptions()
-        options.add_argument("--headless")  # Run in headless mode (no GUI)
-        options.add_argument("--no-sandbox")  # Required for GitHub Actions' ubuntu-latest
-        options.add_argument("--disable-gpu")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--window-size=1920,1080")  # Set a window size for headless
-        options.add_argument(
-            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+# You might have an ImportantVariables.py, make sure it's accessible.
+# For simplicity, if it's just options, you can define them directly.
+# Assuming imp_val is defined elsewhere, if not, define chrome_options here.
+# For a typical UC setup, you might not even need explicit Service or ChromeDriverManager.
+# UC handles a lot of this internally.
 
-        # Point to the ChromeDriver executable available in GitHub Actions runner
-        # This path is common for apt-get installed chromedriver on Ubuntu
-        service = webdriver.ChromeService(executable_path="/usr/bin/chromedriver")
+# Define chrome_options here if not coming from imp_val for GH Actions context
+def get_chrome_options():
+    options = uc.ChromeOptions()
+    options.add_argument("--headless")  # Run in headless mode (no GUI)
+    options.add_argument("--no-sandbox")  # Required for GitHub Actions' ubuntu-latest
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--window-size=1920,1080")  # Set a window size for headless
+    # UC handles user-agent by default to look more natural, but you can add if needed
+    # options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    return options
+
+
+def create_webdriver_instance(browser_type="chrome"):
+    """Initializes and returns a Selenium WebDriver instance using undetected_chromedriver."""
+    if browser_type.lower() == "chrome":
+        chrome_options = get_chrome_options()  # Get options for UC
 
         try:
-            driver = webdriver.Chrome(service=service, options=options)
+            # uc.Chrome will automatically download the correct chromedriver if not found
+            # and set it up. It also handles many browser fingerprinting bypasses.
+            driver = uc.Chrome(options=chrome_options)
             return driver
         except WebDriverException as e:
-            print(f"Error initializing ChromeDriver. Error: {e}")
+            print(f"Error initializing undetected_chromedriver. Error: {e}")
             return None
-    # Add Firefox support if needed, ensure geckodriver is also installed in GH Actions
     else:
-        raise ValueError("Unsupported browser type. Only 'chrome' is configured for GitHub Actions.")
+        raise ValueError("Unsupported browser type. Only 'chrome' is configured for undetected_chromedriver.")
 
 
 def crawl_pagalgana_with_selenium(base_url="https://pagalgana.com/", output_json_file="pagalgana_song_pages.json",
@@ -154,7 +164,7 @@ def crawl_pagalgana_with_selenium(base_url="https://pagalgana.com/", output_json
 # --- Run the crawler ---
 if __name__ == "__main__":
     crawl_pagalgana_with_selenium(
-        base_url="https://pagalgana.com/",
+        base_url="https://pagalgana.com",
         output_json_file="bollywood_song_pages.json",
-        max_crawl_depth=3
+        max_crawl_depth=15
     )
