@@ -19,14 +19,15 @@ jobs:
         with:
           python-version: '3.9' # Specify your desired Python version
 
-      - name: Install system dependencies for Chrome
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y chromium-browser chromium-chromedriver # Install Chromium and its driver
+#      - name: Install system dependencies for Chrome
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y chromium-browser chromium-chromedriver # Install Chromium and its driver
 
       - name: Install Python dependencies
         run: |
-          pip install requests lxml selenium
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run Pagalgana Crawler
         id: run_crawler # Assign an ID to this step to reference its outputs if needed
