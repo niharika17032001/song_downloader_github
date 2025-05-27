@@ -15,38 +15,27 @@ def create_webdriver_instance(browser_type="chrome"):
     """Initializes and returns a Selenium WebDriver instance."""
     if browser_type.lower() == "chrome":
         options = webdriver.ChromeOptions()
-        # options.add_argument("--headless")  # Run in headless mode (no GUI)
+        options.add_argument("--headless")  # Run in headless mode (no GUI)
+        options.add_argument("--no-sandbox")  # Required for GitHub Actions' ubuntu-latest
         options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        # Add a user-agent to mimic a real browser
+        options.add_argument("--window-size=1920,1080")  # Set a window size for headless
         options.add_argument(
             "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-        # Optional: Disable images for faster loading (though it might affect some JS)
-        # prefs = {"profile.managed_default_content_settings.images": 2}
-        # options.add_experimental_option("prefs", prefs)
+
+        # Point to the ChromeDriver executable available in GitHub Actions runner
+        # This path is common for apt-get installed chromedriver on Ubuntu
+        service = webdriver.ChromeService(executable_path="/usr/bin/chromedriver")
 
         try:
-            driver = webdriver.Chrome(options=options)
+            driver = webdriver.Chrome(service=service, options=options)
             return driver
         except WebDriverException as e:
-            print(
-                f"Error initializing ChromeDriver. Make sure chromedriver is in PATH and matches your Chrome version. Error: {e}")
+            print(f"Error initializing ChromeDriver. Error: {e}")
             return None
-    elif browser_type.lower() == "firefox":
-        options = webdriver.FirefoxOptions()
-        options.add_argument("--headless")
-        options.add_argument(
-            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0")
-        try:
-            driver = webdriver.Firefox(options=options)
-            return driver
-        except WebDriverException as e:
-            print(
-                f"Error initializing GeckoDriver. Make sure geckodriver is in PATH and matches your Firefox version. Error: {e}")
-            return None
+    # Add Firefox support if needed, ensure geckodriver is also installed in GH Actions
     else:
-        raise ValueError("Unsupported browser type. Choose 'chrome' or 'firefox'.")
+        raise ValueError("Unsupported browser type. Only 'chrome' is configured for GitHub Actions.")
 
 
 def crawl_pagalgana_with_selenium(base_url="https://pagalgana.com/", output_json_file="pagalgana_song_pages.json",
@@ -145,14 +134,9 @@ def crawl_pagalgana_with_selenium(base_url="https://pagalgana.com/", output_json
                 if "pagalgana.com" in absolute_url and "#" not in absolute_url and "?" not in absolute_url:
                     if not (absolute_url.endswith(
                             ('.mp3', '.zip', '.rar', '.jpg', '.png', '.gif', '.pdf', '.txt', '.xml', '.css', '.js'))):
-                        # Ensure we don't re-add pages that have already been marked as song pages
-                        # or pages already in the queue/visited.
                         if absolute_url not in visited_urls and (absolute_url, current_depth + 1) not in to_visit:
                             to_visit.append((absolute_url, current_depth + 1))
-                            # print(f"    Added to queue: {absolute_url}") # Uncomment for debugging
 
-        except requests.exceptions.RequestException as e:  # This won't directly happen with Selenium, but keeping for conceptual consistency if mixing
-            print(f"  Network error for {current_url}: {e}")
         except Exception as e:
             print(f"  An unexpected error occurred for {current_url}: {e}")
 
@@ -169,23 +153,8 @@ def crawl_pagalgana_with_selenium(base_url="https://pagalgana.com/", output_json
 
 # --- Run the crawler ---
 if __name__ == "__main__":
-    # You might want to start with a more specific URL to limit the crawl scope,
-    # as a full site crawl can take a very long time.
-    # For example, to crawl only the A-Z Bollywood section:
-    # base_url = "https://pagalgana.com/a-to-z-bollywood/a.html" # Start from 'a' page
-    # You'd then need to generate all A-Z base URLs and add them to the initial queue.
-
-    # Example of starting with the main Bollywood category to limit the crawl scope
     crawl_pagalgana_with_selenium(
         base_url="https://pagalgana.com/category/bollywood-mp3-songs.html",
         output_json_file="bollywood_song_pages.json",
-        max_crawl_depth=7  # Limit depth to avoid excessive crawling
+        max_crawl_depth=3
     )
-
-    # To run a very broad crawl from the main page (be cautious, this can take hours/days):
-    # print("\n--- Starting broad crawl from main page (may take a long time!) ---")
-    # crawl_pagalgana_with_selenium(
-    #     base_url="https://pagalgana.com/",
-    #     output_json_file="all_pagalgana_song_pages.json",
-    #     max_crawl_depth=5 # Higher depth means much longer crawl
-    # )
