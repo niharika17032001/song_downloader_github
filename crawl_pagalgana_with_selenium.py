@@ -5,7 +5,9 @@ import json
 import time
 import os  # To check for file existence
 
-import undetected_chromedriver as uc
+# Import standard selenium webdriver
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service  # Required for specifying executable_path
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -13,26 +15,37 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException,
 
 
 def get_chrome_options():
-    options = uc.ChromeOptions()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
+    options = webdriver.ChromeOptions()  # Use standard ChromeOptions
+    options.add_argument("--headless")  # Run in headless mode (no GUI)
+    options.add_argument("--no-sandbox")  # Required for GitHub Actions' ubuntu-latest
     options.add_argument("--disable-gpu")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--window-size=1920,1080")  # Set a window size for headless
+    options.add_argument(
+        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
     return options
 
 
 def create_webdriver_instance(browser_type="chrome"):
-    chrome_options = get_chrome_options()
-    try:
-        driver = uc.Chrome(options=chrome_options)
-        return driver
-    except WebDriverException as e:
-        print(f"Error initializing undetected_chromedriver. Error: {e}")
-        return None
-    else:
-        raise ValueError("Unsupported browser type. Only 'chrome' is configured for undetected_chromedriver.")
+    """Initializes and returns a Selenium WebDriver instance using standard Chrome."""
+    if browser_type.lower() == "chrome":
+        chrome_options = get_chrome_options()  # Get options for standard Chrome
 
+        try:
+            # On GitHub Actions, chromedriver is typically installed at /usr/bin/chromedriver
+            # when using `apt-get install chromium-chromedriver`.
+            service = Service(executable_path="/usr/bin/chromedriver")
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+            return driver
+        except WebDriverException as e:
+            print(f"Error initializing ChromeDriver. Make sure chromedriver is installed and in PATH. Error: {e}")
+            return None
+    else:
+        raise ValueError("Unsupported browser type. Only 'chrome' is configured.")
+
+
+# --- Rest of your existing code (save_crawl_state, load_crawl_state, crawl_pagalgana_with_selenium) ---
+# This part remains largely the same as the previous resumable version.
 
 def save_crawl_state(to_visit_deque, visited_set, song_urls_list, state_filename="crawl_state.json",
                      output_json_file="pagalgana_song_pages.json"):
@@ -144,9 +157,9 @@ def crawl_pagalgana_with_selenium(base_url="https://pagalgana.com/", output_json
             # Debugging: Print a snippet of the page source
             print(f"  Page title: {driver.title}")
             print(f"  Current URL after load: {driver.current_url}")
-            # print("  --- HTML snippet (first 2000 chars) ---")
-            # print(driver.page_source[:2000])
-            # print("  --- End HTML snippet ---")
+            print("  --- HTML snippet (first 2000 chars) ---")
+            print(driver.page_source[:2000])
+            print("  --- End HTML snippet ---")
 
             # Check if it's a song page
             audio_container_elements = driver.find_elements(By.XPATH, AUDIO_CONTAINER_XPATH)
@@ -239,9 +252,9 @@ def crawl_pagalgana_with_selenium(base_url="https://pagalgana.com/", output_json
 # --- Run the crawler ---
 if __name__ == "__main__":
     crawl_pagalgana_with_selenium(
-        base_url="https://pagalgana.com",  # Start from a relevant category
+        base_url="https://pagalgana.com/category/bollywood-mp3-songs.html",  # Start from a relevant category
         output_json_file="bollywood_song_pages.json",
         state_filename="bollywood_crawl_state.json",  # Separate state file for this crawl
-        max_crawl_depth=10,  # Adjust depth as needed
+        max_crawl_depth=3,  # Adjust depth as needed
         save_interval=10  # Save state every 10 pages processed
     )
