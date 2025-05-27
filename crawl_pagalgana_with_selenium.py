@@ -34,8 +34,8 @@ def create_webdriver_instance(browser_type="chrome"):
         try:
             # On GitHub Actions, chromedriver is typically installed at /usr/bin/chromedriver
             # when using `apt-get install chromium-chromedriver`.
-            service = Service(executable_path="/usr/bin/chromedriver")
-            driver = webdriver.Chrome(service=service, options=chrome_options)
+            # service = Service(executable_path="/usr/bin/chromedriver")
+            driver = webdriver.Chrome(options=chrome_options)
             return driver
         except WebDriverException as e:
             print(f"Error initializing ChromeDriver. Make sure chromedriver is installed and in PATH. Error: {e}")
@@ -156,7 +156,7 @@ def crawl_pagalgana_with_selenium(base_url="https://pagalgana.com/", output_json
 
             # Debugging: Print a snippet of the page source
             print(f"  Page title: {driver.title}")
-            print(f"  Current URL after load: {driver.current_url}")
+            # print(f"  Current URL after load: {driver.current_url}")
             # print("  --- HTML snippet (first 2000 chars) ---")
             # print(driver.page_source[:2000])
             # print("  --- End HTML snippet ---")
@@ -212,7 +212,7 @@ def crawl_pagalgana_with_selenium(base_url="https://pagalgana.com/", output_json
 
             # Extract nested links from the fully loaded page
             links = tree.xpath('//a/@href')
-            print(f"  Found {len(links)} raw links on the page.")
+            # print(f"  Found {len(links)} raw links on the page.")
 
             links_added_to_queue = 0
             for link in links:
@@ -231,7 +231,7 @@ def crawl_pagalgana_with_selenium(base_url="https://pagalgana.com/", output_json
                             if absolute_url not in song_page_urls:
                                 to_visit.append((absolute_url, current_depth + 1))
                                 links_added_to_queue += 1
-            print(f"  Added {links_added_to_queue} new valid links to the queue from {current_url}.")
+            # print(f"  Added {links_added_to_queue} new valid links to the queue from {current_url}.")
 
         except Exception as e:
             print(f"  An unexpected error occurred for {current_url}: {e}")
