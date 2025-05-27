@@ -154,7 +154,7 @@ def crawl_pagalgana_with_selenium(base_url="https://pagalgana.com/", output_json
 # --- Run the crawler ---
 if __name__ == "__main__":
     crawl_pagalgana_with_selenium(
-        base_url="https://pagalgana.com/category/bollywood-mp3-songs.html",
+        base_url="https://pagalgana.com/",
         output_json_file="bollywood_song_pages.json",
         max_crawl_depth=3
     )
