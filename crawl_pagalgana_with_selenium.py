@@ -157,9 +157,9 @@ def crawl_pagalgana_with_selenium(base_url="https://pagalgana.com/", output_json
             # Debugging: Print a snippet of the page source
             print(f"  Page title: {driver.title}")
             print(f"  Current URL after load: {driver.current_url}")
-            print("  --- HTML snippet (first 2000 chars) ---")
-            print(driver.page_source[:2000])
-            print("  --- End HTML snippet ---")
+            # print("  --- HTML snippet (first 2000 chars) ---")
+            # print(driver.page_source[:2000])
+            # print("  --- End HTML snippet ---")
 
             # Check if it's a song page
             audio_container_elements = driver.find_elements(By.XPATH, AUDIO_CONTAINER_XPATH)
