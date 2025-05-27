@@ -1,9 +1,10 @@
 name: Pagalgana Crawler
 
 on:
+  push:
   workflow_dispatch: # Allows you to run the workflow manually from the GitHub UI
-  schedule:
-    - cron: '0 0 * * *' # Runs once every day at midnight UTC (adjust as needed)
+#  schedule:
+#    - cron: '0 0 * * *' # Runs once every day at midnight UTC (adjust as needed)
 
 jobs:
   crawl:
